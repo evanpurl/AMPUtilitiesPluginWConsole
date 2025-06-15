@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<PluginManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Name>AMPUtilitiesPurlsWay</Name>
+    <Guid>24FE32B7-803B-43A8-9F98-06E2F3D59D28</Guid>
+    <Version>v1.0.0</Version>
+</PluginManifest>
