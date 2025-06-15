@@ -20,7 +20,8 @@ namespace AMPUtilitiesPurlsWay
         private Persistent<Config> _config = null!;
         private Thread _inputThread;
         private bool _running = true;
-        private CommandManager _commandManager;
+        private static CommandManager _commandManager;
+        private static IChatManagerServer _chatManagerServer;
 
         public override void Init(ITorchBase torch)
         {
@@ -39,7 +40,8 @@ namespace AMPUtilitiesPurlsWay
 
                 case TorchSessionState.Loaded:
                     Log.Info("Session Loaded!");
-                    _commandManager = Torch.Managers.GetManager<CommandManager>();
+                    _commandManager = Torch.CurrentSession.Managers.GetManager<CommandManager>();
+                    _chatManagerServer = Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
                     _inputThread = new Thread(ReadInputLoop)
                     {
                         IsBackground = true
@@ -64,7 +66,7 @@ namespace AMPUtilitiesPurlsWay
             {
                 try
                 {
-                    string line = Console.ReadLine();
+                    string line = System.Console.ReadLine();
                     if (string.IsNullOrWhiteSpace(line))
                         continue;
 
@@ -76,7 +78,14 @@ namespace AMPUtilitiesPurlsWay
                         {
                             try
                             {
-                                // Will add back
+                                if (line.StartsWith("!"))
+                                {
+                                    RunCommand(line);
+                                }
+                                else
+                                {
+                                    SendChatMessage("Server", line);
+                                }
                             }
                             catch (Exception ex)
                             {
@@ -91,5 +100,59 @@ namespace AMPUtilitiesPurlsWay
                 }
             }
         }
+
+        public void SendChatMessage(string author, string message)
+        {
+            try
+            {
+                if (_chatManagerServer != null)
+                    _chatManagerServer.SendMessageAsOther(author, message, VRageMath.Color.Blue);
+                else
+                    Log.Info($"Can't find Chat Manager");
+            }
+            catch (Exception ex)
+            {
+                Log.Info($"Error sending chat message {ex.Message}");
+            }
+        }
+
+        public void RunCommand(string commandText)
+        {
+            try
+            {
+
+                if (_commandManager == null)
+                {
+                    Log.Info($"Command is null");
+                    return;
+                }
+                if (_commandManager.Commands == null)
+                {
+                    Log.Info($"Command tree is null");
+                    return;
+                }
+                string argsText;
+
+                if (commandText.StartsWith("!"))
+                    commandText = commandText.Substring(1);
+
+                var command = _commandManager.Commands.GetCommand(commandText, out argsText);
+
+                if (command != null)
+                {
+                    var argsList = argsText.Split(' ').ToList();
+                    var context = new CommandContext(Torch, this, 0, argsText, argsList);
+                    command.TryInvoke(context);
+                } else
+                {
+                    Log.Info($"Command later is null");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Info($"Error running command: {ex}");
+            }
+        }
+
     }
 }
