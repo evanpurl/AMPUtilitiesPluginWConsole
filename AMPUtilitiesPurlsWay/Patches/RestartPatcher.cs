@@ -42,6 +42,7 @@ namespace AMPUtilitiesPurlsWay.Patches
 
         public static void KillProc(Task<GameSaveResult> task, object torch0)
         {
+            AmpUtilities.Log.Info("Killing Process");
             Process.GetCurrentProcess().Kill();
         }
     }

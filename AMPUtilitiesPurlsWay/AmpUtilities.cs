@@ -1,4 +1,5 @@
 using NLog;
+using Sandbox.ModAPI;
 using System.IO;
 using System.Windows.Controls;
 using Torch;
@@ -9,6 +10,7 @@ using Torch.API.Session;
 using Torch.Commands;
 using Torch.Session;
 using Torch.Views;
+using VRage.Utils;
 
 namespace AMPUtilitiesPurlsWay
 {
@@ -67,7 +69,21 @@ namespace AMPUtilitiesPurlsWay
                         continue;
 
                     Log.Info($"[StdioPlugin] Received Input: {line}");
-                    _commandManager?.HandleCommandFromServer(line);
+                    Thread CurrentThread = Thread.CurrentThread;
+                    if (CurrentThread != MyUtils.MainThread)
+                    {
+                        MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+                        {
+                            try
+                            {
+                                // Will add back
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Warn($"Error when invoking {ex}");
+                            }
+                        });
+                    }
                 }
                 catch (Exception ex)
                 {
