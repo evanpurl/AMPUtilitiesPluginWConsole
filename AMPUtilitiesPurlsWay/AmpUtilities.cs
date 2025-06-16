@@ -42,11 +42,7 @@ namespace AMPUtilitiesPurlsWay
                     Log.Info("Session Loaded!");
                     _commandManager = Torch.CurrentSession.Managers.GetManager<CommandManager>();
                     _chatManagerServer = Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
-                    _inputThread = new Thread(ReadInputLoop)
-                    {
-                        IsBackground = true
-                    };
-                    _inputThread.Start();
+                    Torch.InvokeAsync(ReadInputLoop);
                     break;
 
                 case TorchSessionState.Unloading:
