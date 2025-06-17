@@ -42,7 +42,7 @@ namespace AMPUtilitiesPurlsWay
                     Log.Info("Session Loaded!");
                     _commandManager = Torch.CurrentSession.Managers.GetManager<CommandManager>();
                     _chatManagerServer = Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
-                    Torch.InvokeAsync(ReadInputLoop);
+                    Torch.InvokeAsync(ReadInputLoopAsync);
                     break;
 
                 case TorchSessionState.Unloading:
@@ -56,13 +56,13 @@ namespace AMPUtilitiesPurlsWay
 
         };
 
-        private void ReadInputLoop()
+        private async Task ReadInputLoopAsync()
         {
             while (_running)
             {
                 try
                 {
-                    string line = System.Console.ReadLine();
+                    string line = await ReadLineAsync();
                     if (string.IsNullOrWhiteSpace(line))
                         continue;
 
@@ -96,6 +96,12 @@ namespace AMPUtilitiesPurlsWay
                 }
             }
         }
+
+        public static Task<string> ReadLineAsync()
+        {
+            return Task.Run(() => Console.ReadLine());
+        }
+
 
         public void SendChatMessage(string author, string message)
         {
