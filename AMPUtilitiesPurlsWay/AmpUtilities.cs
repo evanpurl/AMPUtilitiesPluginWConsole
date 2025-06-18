@@ -8,6 +8,7 @@ using Torch.API.Managers;
 using Torch.API.Plugins;
 using Torch.API.Session;
 using Torch.Commands;
+using Torch.Server.Views;
 using Torch.Session;
 using Torch.Views;
 using VRage.Utils;
@@ -18,6 +19,8 @@ namespace AMPUtilitiesPurlsWay
     {
         public static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private Persistent<Config> _config = null!;
+        private static Persistent<Config> _modlist = null!;
+        public static Persistent<Config> Modlist => _modlist;
         private Thread _inputThread;
         private bool _running = true;
         private static CommandManager _commandManager;
@@ -27,6 +30,7 @@ namespace AMPUtilitiesPurlsWay
         {
             base.Init(torch);
             _config = Persistent<Config>.Load(Path.Combine(StoragePath, "AMPUtilitiesPlugin.cfg"));
+            _modlist = Persistent<Config>.Load(Path.Combine(StoragePath, "Modlist.cfg"));
             var sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
             if (sessionManager != null)
                 sessionManager.SessionStateChanged += SessionChanged;
