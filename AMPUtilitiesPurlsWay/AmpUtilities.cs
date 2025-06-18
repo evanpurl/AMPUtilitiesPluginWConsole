@@ -23,6 +23,8 @@ namespace AMPUtilitiesPurlsWay
         private Persistent<Config> _config = null!;
         private static Persistent<Utils.Config> _modlist = null!;
         public static Persistent<Utils.Config> PubModlist => _modlist;
+
+        public static string MainDirectory { get; private set; }
         private Thread _inputThread;
         private bool _running = true;
         private static CommandManager _commandManager;
@@ -32,7 +34,7 @@ namespace AMPUtilitiesPurlsWay
         {
             base.Init(torch);
             _config = Persistent<Config>.Load(Path.Combine(StoragePath, "AMPUtilitiesPlugin.cfg"));
-            _modlist = Persistent<Utils.Config>.Load(Path.Combine(StoragePath, "Modlist.cfg"));
+            MainDirectory = StoragePath;
             var sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
             if (sessionManager != null)
                 sessionManager.SessionStateChanged += SessionChanged;
@@ -45,14 +47,7 @@ namespace AMPUtilitiesPurlsWay
             {
                 case TorchSessionState.Loaded:
                     Log.Info("Session Loaded!");
-                    var modlist = Modlist.GetModlistonload(session);
-                    if (modlist == null)
-                    {
-                        Log.Warn("No mod list found on load.");
-                    } else
-                    {
-                        Modlist.UpdateModList(modlist);
-                    }
+                    Modlist.GenerateModListFile(session);
                     break;
 
                 case TorchSessionState.Unloading:

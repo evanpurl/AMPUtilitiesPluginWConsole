@@ -14,24 +14,34 @@ namespace AMPUtilitiesPurlsWay.Utils
 {
     public static class Modlist
     {
-        public static Dictionary<ulong, string>? GetModlistonload(ITorchSession session)
+        public static void GenerateModListFile(ITorchSession session)
         {
             string sandboxPath = Path.Combine(session.KeenSession.CurrentPath, "Sandbox_config.sbc");
             if (!File.Exists(sandboxPath))
             {
                 AmpUtilities.Log.Warn("Sandbox_config.sbc not found.");
-                return null;
+                return;
             }
-            var persistentSandbox = Persistent<MyObjectBuilder_WorldConfiguration>.Load(sandboxPath);
-            AmpUtilities.Log.Info("Modlist on load: " + persistentSandbox.Data.Mods.Count() + " mods found.");
-            Dictionary<ulong, string> modIds = new Dictionary<ulong, string>();
-            foreach (var mod in persistentSandbox.Data.Mods)
-            {
-                modIds[mod.GetWorkshopId().Id] = mod.PublishedServiceName;
-            }
-            return modIds;
 
+            var persistentSandbox = Persistent<MyObjectBuilder_WorldConfiguration>.Load(sandboxPath);
+            var mods = persistentSandbox.Data.Mods;
+            AmpUtilities.Log.Info("Modlist on load: " + mods.Count() + " mods found.");
+
+            var modListLines = new List<string>();
+            foreach (var mod in mods)
+            {
+                var modId = mod.GetWorkshopId().Id;
+                var service = mod.PublishedServiceName ?? "Steam"; // fallback if null
+                modListLines.Add($"{modId}-{service}");
+            }
+
+            // Write to modlist.txt in the same folder
+            string outputPath = Path.Combine(AmpUtilities.MainDirectory, "modlist.txt");
+            File.WriteAllLines(outputPath, modListLines);
+
+            AmpUtilities.Log.Info($"modlist.txt written with {modListLines.Count} entries.");
         }
+
 
         public static Dictionary<string, ulong> GetModlistCfg()
         {
