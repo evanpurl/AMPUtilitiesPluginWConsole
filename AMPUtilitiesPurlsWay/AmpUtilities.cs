@@ -11,7 +11,9 @@ using Torch.Commands;
 using Torch.Server.Views;
 using Torch.Session;
 using Torch.Views;
+using VRage.Game;
 using VRage.Utils;
+using AMPUtilitiesPurlsWay.Utils;
 
 namespace AMPUtilitiesPurlsWay
 {
@@ -19,8 +21,8 @@ namespace AMPUtilitiesPurlsWay
     {
         public static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private Persistent<Config> _config = null!;
-        private static Persistent<Config> _modlist = null!;
-        public static Persistent<Config> Modlist => _modlist;
+        private static Persistent<Utils.Config> _modlist = null!;
+        public static Persistent<Utils.Config> PubModlist => _modlist;
         private Thread _inputThread;
         private bool _running = true;
         private static CommandManager _commandManager;
@@ -30,7 +32,7 @@ namespace AMPUtilitiesPurlsWay
         {
             base.Init(torch);
             _config = Persistent<Config>.Load(Path.Combine(StoragePath, "AMPUtilitiesPlugin.cfg"));
-            _modlist = Persistent<Config>.Load(Path.Combine(StoragePath, "Modlist.cfg"));
+            _modlist = Persistent<Utils.Config>.Load(Path.Combine(StoragePath, "Modlist.cfg"));
             var sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
             if (sessionManager != null)
                 sessionManager.SessionStateChanged += SessionChanged;
@@ -41,19 +43,60 @@ namespace AMPUtilitiesPurlsWay
 
             switch (state)
             {
-
                 case TorchSessionState.Loaded:
                     Log.Info("Session Loaded!");
-                    _commandManager = Torch.CurrentSession.Managers.GetManager<CommandManager>();
-                    _chatManagerServer = Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
-                    Torch.InvokeAsync(ReadInputLoopAsync);
+                    var modlist = Modlist.GetModlistonload(session);
+                    if (modlist == null)
+                    {
+                        Log.Warn("No mod list found on load.");
+                    } else
+                    {
+                        Modlist.UpdateModList(modlist);
+                    }
                     break;
 
                 case TorchSessionState.Unloading:
                     Log.Info("Session Unloading!");
+                    string sandboxPath = Path.Combine(session.KeenSession.CurrentPath, "Sandbox_config.sbc");
+                    if (!File.Exists(sandboxPath))
+                    {
+                        Log.Warn("Sandbox_config.sbc not found.");
+                        break;
+                    }
+                    //var persistentSandbox = Persistent<MyObjectBuilder_WorldConfiguration>.Load(sandboxPath);
+                    //var checkpoint = persistentSandbox.Data;
+                    //checkpoint.Mods.Clear();
+                    //foreach (var mod in _modlist.Data.Mods)
+                    //{
+                    //    ulong id;
+                    //    string name = mod;
+                    //    if (mod.StartsWith("mod.io/"))
+                    //    {
+                    //        id = 0;
+                    //    }
+                    //    else if (ulong.TryParse(mod, out var parsedId))
+                    //    {
+                    //        name = $"{mod}.sbm";
+                    //        id = parsedId;
+                    //    }
+                    //    else
+                    //    {
+                    //        Log.Warn($"Skipping invalid mod entry: {mod}");
+                    //        continue;
+                    //    }
+
+                    //    checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem
+                    //    {
+                    //        Name = name,
+                    //        PublishedFileId = id
+                    //    });
+                    //}
+
+                    //persistentSandbox.Save(sandboxPath);
+                    //Log.Info("Sandbox_config.sbc mod list updated from Modlist.cfg.");
                     break;
+                }
             }
-        }
 
         public UserControl GetControl() => new PropertyGrid
         {
